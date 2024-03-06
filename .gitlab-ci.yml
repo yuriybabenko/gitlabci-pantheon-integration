@@ -1,0 +1,55 @@
+image: $DOCKER_IMAGE_URL
+
+stages:
+  - deploy
+
+before_script:
+  - eval $(ssh-agent -s)
+  - cat "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add - > /dev/null
+  - mkdir -p $HOME/.ssh && echo "StrictHostKeyChecking no" >> "$HOME/.ssh/config"
+  - git config --global user.email "$GITLAB_USER_EMAIL"
+  - git config --global user.name "Gitlab CI"
+  - git fetch --unshallow origin
+  # This ensures we have the actual branch and not a detached HEAD
+  - git checkout "$CI_COMMIT_REF_NAME"
+  - git remote add pantheon $PANTHEON_GIT_URL
+
+# Deployment to Dev:
+#
+# All pushes to master on GitLab are automatically deployed to the Dev environment on Pantheon.
+#
+# A matching Environment is created on GitLab, which can be found at
+# https://gitlab.com/[your-account]/[your-repo]/-/environments. The Environment will be automatically
+# linked to Dev on Pantheon.
+deploy:dev:
+  stage: deploy
+  environment:
+    name: dev
+    url: https://dev-$PANTHEON_SITE.pantheonsite.io/
+  script:
+    - git push pantheon master --force
+  only:
+    - master
+
+# Multidev approach:
+#
+# When a Merge Request is opened on GitLab, a matching branch (and Multidev environment) is automatically
+# created on Pantheon.
+#   - ex. Merge Request with ID 1 will result in a branch (and Multidev) named `mr-1` on Pantheon.
+#
+# At the same time, a matching Environment is created on GitLab, which can be found at
+# https://gitlab.com/[your-account]/[your-repo]/-/environments. The Environment will be automatically
+# linked to the relevant Multidev on Pantheon.
+#
+# Subsequent pushes to the same branch (open Merge Request) on GitLab will automatically carry over
+# to Pantheon's Multidev.
+deploy:multidev:
+  stage: deploy
+  environment:
+    name: multidev/mr-$CI_MERGE_REQUEST_IID
+    url: https://mr-$CI_MERGE_REQUEST_IID-$PANTHEON_SITE.pantheonsite.io/
+  script:
+    - "/bin/bash ./private/multidev-deploy.sh"
+  only:
+    - merge_requests
+
