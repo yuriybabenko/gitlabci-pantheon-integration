@@ -28,7 +28,7 @@ A Docker container will be used during the GitLab CI process in order to interac
 1. Open your terminal, `cd` to the project root (where `Dockerfile` is) and run the following commands
     - `docker login registry.gitlab.com`
     - `docker build -t registry.gitlab.com/[your-account]/[your-repo] .`
-    - `docker push registry.gitlab.com/[your-account]/[your-repo]
+    - `docker push registry.gitlab.com/[your-account]/[your-repo]`
 2. Verify that your newly created Docker image is showing up on `https://gitlab.com/[your-account]/[your-repo]/container_registry`
     - Click into your newly created image.
     - Copy the URL to the "latest" image tag and save it locally for future use. (There should be an icon next to the tag name which will let you do this.)
