@@ -1,5 +1,7 @@
 # Use the official Composer image as a parent image
 FROM composer:1.8
+# Specify architecture for the image, if necessary:
+# FROM --platform=linux/amd64 composer:1.8
 
 # Update/upgrade apk
 RUN apk update
